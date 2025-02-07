@@ -1,5 +1,3 @@
-using WebServer.Http.Rules;
-
 namespace WebServer.Http.Objects;
 
 public readonly struct RequestLine
@@ -10,9 +8,9 @@ public readonly struct RequestLine
 
     public RequestLine(string httpMethod, string requestTarget, string httpVersion) : this()
     {
-        HttpMethod = HttpValidation.IsValidHttpMethod(httpMethod);
+        HttpMethod = httpMethod;
         RequestTarget = requestTarget;
-        HttpVersion = HttpValidation.IsValidHttpVersion(httpVersion);
+        HttpVersion = httpVersion;
     }
 
     public override string ToString()

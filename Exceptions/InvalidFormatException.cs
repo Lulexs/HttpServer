@@ -1,6 +1,7 @@
 namespace WebServer.Exceptions;
 
-public class InvalidFormat : Exception
+public class InvalidFormatException : Exception
 {
-    public InvalidFormat() { }
+    public InvalidFormatException() { }
+    public InvalidFormatException(string message) : base(message) { }
 }
