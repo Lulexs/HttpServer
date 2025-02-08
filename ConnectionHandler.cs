@@ -1,5 +1,6 @@
 using System.Net.Sockets;
 using System.Text;
+using WebServer.Exceptions;
 using WebServer.Http;
 using WebServer.Parsing.Parser;
 
@@ -8,6 +9,8 @@ namespace WebServer;
 public class ConnectionHandler
 {
     private readonly Socket? _connection;
+    private const int WorkBufferSize = 4096;
+    private const int ReadBufferSize = 1024;
 
     public ConnectionHandler(Socket? socket)
     {
@@ -30,19 +33,27 @@ public class ConnectionHandler
 
     public async Task Handle()
     {
-        var buffer = new byte[512];
-        var recvBuffer = new byte[64];
+        var buffer = new byte[WorkBufferSize];
+        var recvBuffer = new byte[ReadBufferSize];
 
         try
         {
             int totalRecieved = 0;
             int remainder = 0;
+            int offsetInReadBuff = 0;
 
             while (true)
             {
                 if (_connection is null)
                 {
                     break;
+                }
+
+                if (remainder != 0)
+                {
+                    recvBuffer[offsetInReadBuff..(offsetInReadBuff + remainder)].CopyTo(buffer, totalRecieved);
+                    totalRecieved += remainder;
+                    remainder = 0;
                 }
 
                 var recieved = await _connection.ReceiveAsync(recvBuffer, SocketFlags.None);
@@ -57,7 +68,7 @@ public class ConnectionHandler
                 while (eohLine == -1)
                 {
 
-                    if (totalRecieved + recieved > 512)
+                    if (totalRecieved + recieved > ReadBufferSize)
                     {
                         // WRITE RESPONSE REQUEST HEADER TOO LARGE
                         // CLOSE CONNECTION
@@ -70,7 +81,7 @@ public class ConnectionHandler
                     eohLine = GetSubarrayIndexOf(recvBuffer, Encoding.UTF8.GetBytes("\r\n\r\n"));
                 }
 
-                if (totalRecieved + eohLine + 4 > 512)
+                if (totalRecieved + eohLine + 4 > WorkBufferSize)
                 {
                     // WIRTE RESPONSE REQUEST HEADER TOO LARGE
                     // CLOSE CONNECTION
@@ -81,12 +92,69 @@ public class ConnectionHandler
                     totalRecieved += eohLine + 4;
                     remainder = recieved - eohLine - 4;
                 }
-                Console.WriteLine(Encoding.UTF8.GetString(buffer[..totalRecieved]));
-                Console.WriteLine(Encoding.UTF8.GetString(buffer[..totalRecieved]).Length);
-                Console.WriteLine(remainder);
-                HttpParser parser = new(buffer[..totalRecieved]);
 
-                HttpRequest request = parser.GetRequest();
+                HttpParser parser = new(buffer[..totalRecieved]);
+                totalRecieved = 0;
+                HttpRequest? request = null;
+                try
+                {
+                    request = parser.GetRequest();
+                    recvBuffer[(eohLine + 4)..(eohLine + 4 + remainder)].CopyTo(buffer, 0);
+                    totalRecieved = remainder;
+
+                    if (request.Header.ContentLength is not null && request.Header.ContentLength > WorkBufferSize)
+                    {
+                        // DONT WANT TO PROCESS BODY LARGER THAN few KB
+                    }
+                    else if (request.Header.ContentLength is not null)
+                    {
+                        if (request.Header.ContentLength > (ulong)remainder)
+                        {
+                            recieved = await _connection.ReceiveAsync(buffer);
+
+                            buffer[..recieved].CopyTo(buffer, remainder);
+                            recvBuffer[(eohLine + 4)..(eohLine + 4 + remainder)].CopyTo(buffer, 0);
+
+                            request.Body = new() { Value = new byte[(int)request.Header.ContentLength] };
+                            buffer[..(int)request.Header.ContentLength].CopyTo(request.Body.Value, 0);
+                            remainder = 0;
+                            offsetInReadBuff = 0;
+                            totalRecieved = 0;
+                        }
+                        else
+                        {
+                            request.Body = new() { Value = new byte[(int)request.Header.ContentLength] };
+                            recvBuffer[(eohLine + 4)..(eohLine + 4 + (int)request.Header.ContentLength)].CopyTo(request.Body.Value, 0);
+                            remainder -= (int)request.Header.ContentLength;
+                            offsetInReadBuff = eohLine + 4 + (int)request.Header.ContentLength;
+                            totalRecieved = 0;
+                        }
+                    }
+                }
+                catch (InvalidFormatException)
+                {
+                    // RESPOND WITH INVALID FORMAT RESPONSE
+                }
+                catch (UnrecognizedMethodException)
+                {
+                    // RESPOND
+                }
+                catch (VersionNotSupportedException)
+                {
+                    // RESPOND
+                }
+
+                if (request is null)
+                {
+                    var resp = Encoding.UTF8.GetString(buffer, 0, recieved);
+                    await _connection.SendAsync(Encoding.UTF8.GetBytes(resp), 0);
+
+                }
+
+                if (request!.Body is not null)
+                {
+                    Console.WriteLine(Encoding.UTF8.GetString(request.Body.Value!));
+                }
 
                 var response = Encoding.UTF8.GetString(buffer, 0, recieved);
                 await _connection.SendAsync(Encoding.UTF8.GetBytes(response), 0);
