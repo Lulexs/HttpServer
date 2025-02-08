@@ -40,7 +40,7 @@ public class Header
     }
     public override string ToString()
     {
-        var properties = this.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
                                 .Where(prop => prop.GetIndexParameters().Length == 0);
         var sb = new StringBuilder("{");
 
