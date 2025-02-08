@@ -1,6 +1,8 @@
 using System.Net.Sockets;
 using System.Text;
+using WebServer.Http;
 using WebServer.Http.Objects;
+using WebServer.Parsing.Parser;
 
 namespace WebServer;
 
@@ -35,9 +37,8 @@ public class ConnectionHandler
 
                 Console.WriteLine(Encoding.UTF8.GetString(buffer));
                 HttpParser parser = new(buffer);
-                var rl = parser.GetRequestLine();
-                var header = parser.GetHeader();
-                Console.WriteLine(header);
+                HttpRequest request = parser.GetRequest();
+                Console.WriteLine(request.Header);
 
                 var response = Encoding.UTF8.GetString(buffer, 0, recieved);
                 await _connection.SendAsync(Encoding.UTF8.GetBytes(response), 0);
