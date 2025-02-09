@@ -2,6 +2,7 @@ using System.Net.Sockets;
 using System.Text;
 using WebServer.Exceptions;
 using WebServer.Http;
+using WebServer.Http.Objects;
 using WebServer.Parsing.Parser;
 
 namespace WebServer;
@@ -137,27 +138,28 @@ public class ConnectionHandler
                 }
                 catch (UnrecognizedMethodException)
                 {
-                    // RESPOND
+                    StatusLine sl = new() { HttpVersion = HttpConstants.Http11, StatusCode = 405, ReasonPhrase = "MethodNotAllowed" };
+                    ResponseHeader rh = new() { ContentType = "application/json", Connection = "close" };
+                    HttpResponse response1 = new HttpResponse() { StatusLine = sl, Header = rh };
+                    var bytes = Encoding.UTF8.GetBytes(response1.ToString());
+                    Console.WriteLine(response1.ToString());
+                    await _connection.SendAsync(bytes, SocketFlags.None);
+                    throw;
                 }
                 catch (VersionNotSupportedException)
                 {
                     // RESPOND
                 }
 
-                if (request is null)
-                {
-                    var resp = Encoding.UTF8.GetString(buffer, 0, recieved);
-                    await _connection.SendAsync(Encoding.UTF8.GetBytes(resp), 0);
+                // if (request is null)
+                // {
+                //     var resp = Encoding.UTF8.GetString(buffer, 0, recieved);
+                //     await _connection.SendAsync(Encoding.UTF8.GetBytes(resp), 0);
 
-                }
+                // }
 
-                if (request!.Body is not null)
-                {
-                    Console.WriteLine(Encoding.UTF8.GetString(request.Body.Value!));
-                }
-
-                var response = Encoding.UTF8.GetString(buffer, 0, recieved);
-                await _connection.SendAsync(Encoding.UTF8.GetBytes(response), 0);
+                // var response = Encoding.UTF8.GetString(buffer, 0, recieved);
+                // await _connection.SendAsync(Encoding.UTF8.GetBytes(response), 0);
             }
         }
         catch (Exception ec)

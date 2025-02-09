@@ -7,12 +7,12 @@ public static class HttpValidation
 {
     public static bool IsValidHttpRequest(HttpRequest req)
     {
-        return IsValidRequestLine(req.RequestLine) && IsValidHeader(req.Header);
+        return IsValidRequestLine(req.RequestLine) && IsValidRequestHeader(req.Header);
     }
 
-    public static bool IsValidHeader(Header header)
+    public static bool IsValidRequestHeader(RequestHeader RequestHeader)
     {
-        return IsValidConnection(header.Connection);
+        return IsValidConnection(RequestHeader.Connection);
     }
 
     public static bool IsValidConnection(string? connection)

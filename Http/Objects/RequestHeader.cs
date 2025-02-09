@@ -4,7 +4,7 @@ using WebServer.Exceptions;
 
 namespace WebServer.Http.Objects;
 
-public class Header
+public class RequestHeader
 {
     public string? Connection { get; set; }
     public string? UserAgent { get; set; }

@@ -15,7 +15,7 @@ public class HttpParser(byte[] request) : IHttpParser
     public HttpRequest GetRequest()
     {
         RequestLine rl = GetRequestLine();
-        Header header = GetHeader();
+        RequestHeader header = GetHeader();
         return new HttpRequest() { RequestLine = rl, Header = header };
     }
 
@@ -36,14 +36,14 @@ public class HttpParser(byte[] request) : IHttpParser
         return new RequestLine(requestLineParams[0], requestLineParams[1], requestLineParams[2]);
     }
 
-    protected Header GetHeader()
+    protected RequestHeader GetHeader()
     {
         _pointer += HttpConstants.NewLine.Length;
         Regex regex = new(HttpConstants.HeaderFieldRegex, RegexOptions.Compiled | RegexOptions.Multiline);
 
         var matches = regex.Matches(_request[_pointer..]);
 
-        Header header = new();
+        RequestHeader header = new();
         for (int i = 0; i < matches.Count; ++i)
         {
             if (i > 0 && matches[i - 1].Index + matches[i - 1].Length != matches[i].Index)
