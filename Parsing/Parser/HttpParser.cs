@@ -14,6 +14,7 @@ public class HttpParser(byte[] request) : IHttpParser
 
     public HttpRequest GetRequest()
     {
+        throw new UnrecognizedMethodException("Unr");
         RequestLine rl = GetRequestLine();
         RequestHeader header = GetHeader();
         return new HttpRequest() { RequestLine = rl, Header = header };

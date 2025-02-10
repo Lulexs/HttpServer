@@ -138,13 +138,17 @@ public class ConnectionHandler
                 }
                 catch (UnrecognizedMethodException)
                 {
-                    StatusLine sl = new() { HttpVersion = HttpConstants.Http11, StatusCode = 405, ReasonPhrase = "MethodNotAllowed" };
-                    ResponseHeader rh = new() { ContentType = "application/json", Connection = "close" };
-                    HttpResponse response1 = new HttpResponse() { StatusLine = sl, Header = rh };
+                    // StatusLine sl = new() { HttpVersion = HttpConstants.Http11, StatusCode = 405, ReasonPhrase = "MethodNotAllowed" };
+                    // ResponseHeader rh = new() { ContentType = "application/json", Connection = "close" };
+                    // HttpResponse response1 = new HttpResponse() { StatusLine = sl, Header = rh };
+
+                    FormResponse fr = new FormResponse(StatusCodes.StatusCodes405MethodNotAllowed,
+                    new HeaderOptions() { Connection = "close", ContentType = "application/json" });
+                    HttpResponse response1 = fr.GetResponse();
+
                     var bytes = Encoding.UTF8.GetBytes(response1.ToString());
                     Console.WriteLine(response1.ToString());
                     await _connection.SendAsync(bytes, SocketFlags.None);
-                    throw;
                 }
                 catch (VersionNotSupportedException)
                 {
