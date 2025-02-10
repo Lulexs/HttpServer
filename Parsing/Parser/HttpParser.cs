@@ -14,7 +14,6 @@ public class HttpParser(byte[] request) : IHttpParser
 
     public HttpRequest GetRequest()
     {
-        throw new UnrecognizedMethodException("Unr");
         RequestLine rl = GetRequestLine();
         RequestHeader header = GetHeader();
         return new HttpRequest() { RequestLine = rl, Header = header };
@@ -25,13 +24,13 @@ public class HttpParser(byte[] request) : IHttpParser
         _pointer = _request.AsSpan().IndexOf(HttpConstants.NewLine);
         if (_pointer == 0)
         {
-            throw new InvalidFormatException();
+            throw new TerminalInvalidFormatException();
         }
 
         string[] requestLineParams = _request[.._pointer].Split(HttpConstants.Space);
         if (requestLineParams.Length != 3)
         {
-            throw new InvalidFormatException();
+            throw new TerminalInvalidFormatException();
         }
 
         return new RequestLine(requestLineParams[0], requestLineParams[1], requestLineParams[2]);

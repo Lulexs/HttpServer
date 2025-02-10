@@ -1,8 +1,10 @@
+using System.ComponentModel.DataAnnotations;
 using System.Net.Sockets;
 using System.Text;
 using WebServer.Exceptions;
 using WebServer.Http;
 using WebServer.Http.Objects;
+using WebServer.Http.Rules;
 using WebServer.Parsing.Parser;
 
 namespace WebServer;
@@ -132,38 +134,36 @@ public class ConnectionHandler
                         }
                     }
                 }
-                catch (InvalidFormatException)
+                catch (TerminalInvalidFormatException)
                 {
-                    // RESPOND WITH INVALID FORMAT RESPONSE
-                }
-                catch (UnrecognizedMethodException)
-                {
-                    // StatusLine sl = new() { HttpVersion = HttpConstants.Http11, StatusCode = 405, ReasonPhrase = "MethodNotAllowed" };
-                    // ResponseHeader rh = new() { ContentType = "application/json", Connection = "close" };
-                    // HttpResponse response1 = new HttpResponse() { StatusLine = sl, Header = rh };
-
-                    FormResponse fr = new FormResponse(StatusCodes.StatusCodes405MethodNotAllowed,
-                    new HeaderOptions() { Connection = "close", ContentType = "application/json" });
-                    HttpResponse response1 = fr.GetResponse();
-
-                    var bytes = Encoding.UTF8.GetBytes(response1.ToString());
-                    Console.WriteLine(response1.ToString());
-                    await _connection.SendAsync(bytes, SocketFlags.None);
-                }
-                catch (VersionNotSupportedException)
-                {
-                    // RESPOND
+                    await _connection.DisconnectAsync(false);
+                    return;
                 }
 
-                // if (request is null)
-                // {
-                //     var resp = Encoding.UTF8.GetString(buffer, 0, recieved);
-                //     await _connection.SendAsync(Encoding.UTF8.GetBytes(resp), 0);
+                if (request is null)
+                {
+                    await _connection.DisconnectAsync(false);
+                    return;
+                }
 
-                // }
+                Http.Rules.ValidationResult res = ValidateRequest.Validate(request);
+                if (res.ErrorCode is not null)
+                {
 
-                // var response = Encoding.UTF8.GetString(buffer, 0, recieved);
-                // await _connection.SendAsync(Encoding.UTF8.GetBytes(response), 0);
+                    HeaderOptions opts = new() { Connection = request.Header.Connection };
+                    FormResponse fr = new(res.ErrorCode.Value, opts);
+                    HttpResponse invalidRequestResponse = fr.GetResponse();
+                    await _connection.SendAsync(Encoding.UTF8.GetBytes(invalidRequestResponse.ToString()), 0);
+                }
+                else
+                {
+                    // MAPPING ROUTES
+                }
+
+                if (request.Header.Connection == "close" || !HttpValidation.IsValidConnection(request.Header.Connection))
+                {
+                    await _connection.DisconnectAsync(false);
+                }
             }
         }
         catch (Exception ec)

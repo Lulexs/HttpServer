@@ -8,5 +8,6 @@ public enum StatusCodes
     StatusCodes403Forbidden = 403,
     StatusCodes404NotFound = 404,
     StatusCodes405MethodNotAllowed = 405,
+    StatusCode505HttpVersionNotSupported = 505
 
 }
