@@ -10,5 +10,5 @@ public abstract class RequestHandler
         _request = request;
     }
 
-    public abstract HttpResponse GetResponse();
+    public abstract void GetResponse();
 }

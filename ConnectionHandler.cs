@@ -175,4 +175,5 @@ public class ConnectionHandler
             _connection?.Dispose();
         }
     }
+
 }
