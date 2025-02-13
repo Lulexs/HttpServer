@@ -6,12 +6,14 @@ namespace WebServer.Controllers;
 public class TestController
 {
 
+    [Verb("get")]
     [Route("abc/def")]
     public void DoSomething()
     {
 
     }
 
+    [Verb("post")]
     [Route("efg/hci")]
     public void DoSthElse()
     {

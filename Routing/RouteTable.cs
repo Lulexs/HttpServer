@@ -1,7 +1,5 @@
 using System.Reflection;
-using System.Text;
 using WebServer.ControllersAttributes;
-using WebServer.RequestHandlers;
 
 namespace WebServer.Routing;
 
@@ -44,9 +42,9 @@ public sealed class RouteTable
                 var methods = c.GetMethods(BindingFlags.Public | BindingFlags.Instance);
                 foreach (var method in methods)
                 {
-                    if (method.GetCustomAttribute<Route>() is not null)
+                    if ((method.GetCustomAttribute<Route>() is not null) && (method.GetCustomAttribute<Verb>() is not null))
                     {
-                        string route = baseRoute + "/" + method.GetCustomAttribute<Route>()!.TheRoute;
+                        string route = method.GetCustomAttribute<Verb>()!.HttpMethod + "/" + baseRoute + "/" + method.GetCustomAttribute<Route>()!.TheRoute;
                         Routes.Add(route, method);
                     }
 

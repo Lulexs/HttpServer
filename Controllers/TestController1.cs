@@ -6,12 +6,14 @@ namespace WebServer.Controllers;
 public class TestController1()
 {
 
+    [Verb("delete")]
     [Route("dosth")]
     public void DoSth()
     {
 
     }
 
+    [Verb("put")]
     [Route("dosthelse")]
     public void DoSthElse()
     {

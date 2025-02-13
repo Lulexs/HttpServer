@@ -1,11 +1,20 @@
+using System.Reflection;
 using WebServer.Http;
 using WebServer.RequestHandlers;
 
 namespace WebServer.Routing;
 
-public static class Router
+public class Router
 {
-    public static void GetRequestHandler(HttpRequest request)
+
+    private readonly Dictionary<string, MethodInfo> _routes;
+
+    public Router(Dictionary<string, MethodInfo> routes)
+    {
+        _routes = routes;
+    }
+
+    public RequestHandler GetRequestHandler(HttpRequest request)
     {
         string route = request.RequestLine.RequestTarget;
 
@@ -13,14 +22,22 @@ public static class Router
 
         if (path[0] == "static")
         {
-            // return new StaticRequestHandler(request);
+            return new StaticRequestHandler(request);
         }
 
-        // return GetControllerHandler(request);
+        return GetControllerHandler(request);
     }
 
-    // private static RequestHandler GetControllerHandler(HttpRequest request)
-    // {
+    private RequestHandler GetControllerHandler(HttpRequest request)
+    {
+        string method = request.RequestLine.HttpMethod;
+        string target = request.RequestLine.RequestTarget;
+        string route = method + "/" + target;
 
-    // }
+        if (!_routes.ContainsKey(route))
+        {
+            return new ErrorRequestHandler(request);
+        }
+        return new ControllerRequestHandler(request);
+    }
 }
