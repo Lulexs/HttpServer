@@ -6,6 +6,8 @@ using WebServer.Http;
 using WebServer.Http.Objects;
 using WebServer.Http.Rules;
 using WebServer.Parsing.Parser;
+using WebServer.RequestHandlers;
+using WebServer.Routing;
 
 namespace WebServer;
 
@@ -14,10 +16,12 @@ public class ConnectionHandler
     private readonly Socket? _connection;
     private const int WorkBufferSize = 4096;
     private const int ReadBufferSize = 1024;
+    private Router _router;
 
-    public ConnectionHandler(Socket? socket)
+    public ConnectionHandler(Socket? socket, Router router)
     {
         _connection = socket;
+        _router = router;
     }
 
     static int GetSubarrayIndexOf(byte[] array, byte[] subarray)
@@ -158,6 +162,9 @@ public class ConnectionHandler
                 else
                 {
                     // MAPPING ROUTES
+                    RequestHandler handler = _router.GetRequestHandler(request);
+                    HttpResponse managedResponse = handler.GetResponse();
+                    await _connection.SendAsync(Encoding.UTF8.GetBytes(managedResponse.ToString()), 0);
                 }
 
                 if (request.Header.Connection == "close" || !HttpValidation.IsValidConnection(request.Header.Connection))

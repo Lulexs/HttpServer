@@ -4,27 +4,25 @@ using WebServer;
 using WebServer.Routing;
 
 
-// using var listener = new Socket(SocketType.Stream, ProtocolType.Tcp);
-// listener.Bind(new IPEndPoint(IPAddress.Loopback, 8080));
-// listener.Listen(100);
-
-// while (true)
-// {
-//     var connection = await listener.AcceptAsync();
-
-//     _ = Task.Run(async () =>
-//     {
-//         ConnectionHandler connHandler = new(connection);
-//         await connHandler.Handle();
-//     });
-// }
-
-
 var routes = RouteTable.GetRoutes();
-foreach (var route in routes)
+
+
+using var listener = new Socket(SocketType.Stream, ProtocolType.Tcp);
+listener.Bind(new IPEndPoint(IPAddress.Loopback, 8080));
+listener.Listen(100);
+
+while (true)
 {
-    Console.WriteLine($"{route.Key} {route.Value.Name}");
+    var connection = await listener.AcceptAsync();
+
+    _ = Task.Run(async () =>
+    {
+        ConnectionHandler connHandler = new(connection, new Router(routes));
+        await connHandler.Handle();
+    });
 }
+
+
 
 
 // using System.Text;

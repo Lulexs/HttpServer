@@ -1,4 +1,5 @@
 using WebServer.Http;
+using WebServer.Http.Objects;
 
 namespace WebServer.RequestHandlers;
 
@@ -8,8 +9,10 @@ public class ControllerRequestHandler : RequestHandler
     {
     }
 
-    public override void GetResponse()
+    public override HttpResponse GetResponse()
     {
-        throw new NotImplementedException();
+        Console.WriteLine("Controller handler");
+        return new HttpResponse() { StatusLine = new StatusLine() { HttpVersion = HttpConstants.Http11, StatusCode = (int)StatusCodes.StatusCodes200Ok } };
+
     }
 }

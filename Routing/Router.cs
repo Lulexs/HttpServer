@@ -18,7 +18,7 @@ public class Router
     {
         string route = request.RequestLine.RequestTarget;
 
-        string[] path = route.Split("/");
+        string[] path = route.Split("/")[1..];
 
         if (path[0] == "static")
         {
