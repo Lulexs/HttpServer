@@ -14,4 +14,21 @@ public static class HttpConstants
     public static readonly string[] Versions = [Http11];
     public const string HeaderFieldRegex = @"^([A-Za-z-]+):[ \t]*([^\r\n]*?)[ \t]*\r\n";
     public static readonly HashSet<string> ConnectionOptions = ["close", "keep-alive"];
+    public static string GetContentType(string? ext)
+    {
+        if (ext == "jpg" || ext == "png")
+        {
+            return $"image/{ext}";
+        }
+        else if (ext == "txt" || ext == "html" || ext == "css" || ext == "js")
+        {
+            return $"text/{ext}";
+        }
+        else if (ext == "json" || ext == "xml")
+        {
+            return $"application/{ext}";
+        }
+        return "application/octet-stream";
+    }
+
 }

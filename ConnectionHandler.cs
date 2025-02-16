@@ -165,6 +165,10 @@ public class ConnectionHandler
                     RequestHandler handler = _router.GetRequestHandler(request);
                     HttpResponse managedResponse = handler.GetResponse();
                     await _connection.SendAsync(Encoding.UTF8.GetBytes(managedResponse.ToString()), 0);
+                    if (managedResponse.Body is not null && managedResponse.Body.Value is byte[] content)
+                    {
+                        await _connection.SendAsync(content, 0);
+                    }
                 }
 
                 if (request.Header.Connection == "close" || !HttpValidation.IsValidConnection(request.Header.Connection))

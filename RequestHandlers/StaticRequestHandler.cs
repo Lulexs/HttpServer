@@ -12,6 +12,11 @@ public class StaticRequestHandler : RequestHandler
 
     public override HttpResponse GetResponse()
     {
+        if (_request.RequestLine.HttpMethod != HttpConstants.Get)
+        {
+            // RETURN METHOD UNSUPPORTED
+        }
+
         var curDir = Directory.GetParent(
             Directory.GetParent(
                 Directory.GetParent(
@@ -27,16 +32,35 @@ public class StaticRequestHandler : RequestHandler
         string resource = target[8..];
 
         var resourcePath = Path.Combine(staticAssetsPath, resource);
+        string? extension = null;
         if (_request.Header.ContentType is not null)
         {
-            resourcePath += "." + _request.Header.ContentType.Split("/")[1];
+            extension = _request.Header.ContentType.Split("/")[1];
         }
-
-        if (!File.Exists(resourcePath))
+        else
         {
-            // RETURN FILE DOESNT EXIST
+            string[] matchingFiles = Directory.GetFiles(staticAssetsPath, resource + ".*");
+
+            if (matchingFiles.Length != 0)
+            {
+                FileInfo fi = new(matchingFiles.First());
+                extension = fi.Extension;
+            }
+            else
+            {
+                // RETURN FIEL DOSNT EXIST
+            }
         }
 
-        return new HttpResponse() { StatusLine = new StatusLine() { HttpVersion = HttpConstants.Http11, StatusCode = (int)StatusCodes.StatusCodes200Ok } };
+        resourcePath += extension;
+
+        byte[] bytes = File.ReadAllBytes(resourcePath);
+        HeaderOptions opts = new()
+        {
+            ContentType = HttpConstants.GetContentType(extension![1..]),
+            Connection = "close"
+        };
+        FormResponse fr = new(StatusCodes.StatusCodes200Ok, opts, bytes);
+        return fr.GetResponse();
     }
 }
