@@ -1,5 +1,5 @@
+using System.Text;
 using WebServer.Http;
-using WebServer.Http.Objects;
 
 namespace WebServer.RequestHandlers;
 
@@ -33,34 +33,57 @@ public class StaticRequestHandler : RequestHandler
 
         var resourcePath = Path.Combine(staticAssetsPath, resource);
         string? extension = null;
-        if (_request.Header.ContentType is not null)
-        {
-            extension = _request.Header.ContentType.Split("/")[1];
-        }
-        else
-        {
-            string[] matchingFiles = Directory.GetFiles(staticAssetsPath, resource + ".*");
 
-            if (matchingFiles.Length != 0)
+        if (!File.Exists(resourcePath))
+        {
+
+            if (_request.Header.ContentType is not null)
             {
-                FileInfo fi = new(matchingFiles.First());
-                extension = fi.Extension;
+                extension = _request.Header.ContentType.Split("/")[1];
             }
             else
             {
-                // RETURN FIEL DOSNT EXIST
+                string[] matchingFiles = Directory.GetFiles(staticAssetsPath, resource + ".*");
+
+                if (matchingFiles.Length != 0)
+                {
+                    FileInfo fi = new(matchingFiles.First());
+                    extension = fi.Extension;
+                }
+                else
+                {
+                    // RETURN FIEL DOSNT EXIST
+                }
             }
+
+            resourcePath += "." + extension;
+        }
+        else
+        {
+            FileInfo fi = new(resourcePath);
+            extension = fi.Extension;
+        }
+        HeaderOptions opts;
+        FormResponse fr;
+        if (HttpConstants.IsBinary(extension![1..]))
+        {
+            byte[] bytes = File.ReadAllBytes(resourcePath);
+            opts = new()
+            {
+                ContentType = HttpConstants.GetContentType(extension![1..]),
+                Connection = "close"
+            };
+            fr = new(StatusCodes.StatusCodes200Ok, opts, bytes);
+            return fr.GetResponse();
         }
 
-        resourcePath += extension;
-
-        byte[] bytes = File.ReadAllBytes(resourcePath);
-        HeaderOptions opts = new()
+        string text = File.ReadAllText(resourcePath);
+        opts = new()
         {
             ContentType = HttpConstants.GetContentType(extension![1..]),
             Connection = "close"
         };
-        FormResponse fr = new(StatusCodes.StatusCodes200Ok, opts, bytes);
+        fr = new(StatusCodes.StatusCodes200Ok, opts, Encoding.UTF8.GetBytes(text));
         return fr.GetResponse();
     }
 }

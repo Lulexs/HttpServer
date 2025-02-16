@@ -30,5 +30,10 @@ public static class HttpConstants
         }
         return "application/octet-stream";
     }
+    private static readonly HashSet<string> TextualTypes = ["txt", "html", "css", "js"];
+    public static bool IsBinary(string ext)
+    {
+        return !TextualTypes.Contains(ext);
+    }
 
 }

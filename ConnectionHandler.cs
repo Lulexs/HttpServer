@@ -167,7 +167,8 @@ public class ConnectionHandler
                     await _connection.SendAsync(Encoding.UTF8.GetBytes(managedResponse.ToString()), 0);
                     if (managedResponse.Body is not null && managedResponse.Body.Value is byte[] content)
                     {
-                        await _connection.SendAsync(content, 0);
+                        if (managedResponse.Header is not null && HttpConstants.IsBinary(managedResponse.Header.ContentType!))
+                            await _connection.SendAsync(content, 0);
                     }
                 }
 
