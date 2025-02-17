@@ -71,7 +71,7 @@ public class StaticRequestHandler : RequestHandler
             opts = new()
             {
                 ContentType = HttpConstants.GetContentType(extension![1..]),
-                Connection = "close"
+                Connection = _request.Header.Connection ?? "close"
             };
             fr = new(StatusCodes.StatusCodes200Ok, opts, bytes);
             return fr.GetResponse();
@@ -81,7 +81,7 @@ public class StaticRequestHandler : RequestHandler
         opts = new()
         {
             ContentType = HttpConstants.GetContentType(extension![1..]),
-            Connection = "close"
+            Connection = _request.Header.Connection ?? "close"
         };
         fr = new(StatusCodes.StatusCodes200Ok, opts, Encoding.UTF8.GetBytes(text));
         return fr.GetResponse();

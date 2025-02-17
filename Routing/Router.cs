@@ -32,12 +32,12 @@ public class Router
     {
         string method = request.RequestLine.HttpMethod;
         string target = request.RequestLine.RequestTarget;
-        string route = method + "/" + target;
+        string route = method.ToLower() + target;
 
         if (!_routes.ContainsKey(route))
         {
             return new ErrorRequestHandler(request);
         }
-        return new ControllerRequestHandler(request);
+        return new ControllerRequestHandler(request, _routes[route]);
     }
 }

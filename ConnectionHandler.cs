@@ -1,9 +1,7 @@
-using System.ComponentModel.DataAnnotations;
 using System.Net.Sockets;
 using System.Text;
 using WebServer.Exceptions;
 using WebServer.Http;
-using WebServer.Http.Objects;
 using WebServer.Http.Rules;
 using WebServer.Parsing.Parser;
 using WebServer.RequestHandlers;

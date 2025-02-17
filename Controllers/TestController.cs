@@ -10,7 +10,7 @@ public class TestController
     [Route("abc/def")]
     public void DoSomething()
     {
-
+        Console.WriteLine("HEREREEEEEEE");
     }
 
     [Verb("post")]

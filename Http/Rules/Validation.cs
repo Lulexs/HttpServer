@@ -1,5 +1,3 @@
-using WebServer.Exceptions;
-
 namespace WebServer.Http.Rules;
 
 public static class HttpValidation
